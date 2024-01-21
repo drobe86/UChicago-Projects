@@ -1,0 +1,149 @@
+import numpy as np
+from numpy import linalg as LA
+from scipy import linalg as LAScipy
+from pandas import DataFrame
+from sklearn import preprocessing
+import pandas as pd
+
+Iris_df = pd.read_csv(r"C:\Users\drobey\Documents\Coding\Machine Learning - Materials\K579ML\Week 1\iris.csv")
+iris_numbers = Iris_df.iloc[:,0:4]
+iris_numbers.head()
+
+
+x = iris_numbers.values #returns a numpy array
+min_max_scaler = preprocessing.MinMaxScaler()
+x_scaled = min_max_scaler.fit_transform(x)
+iris_df_num_scaled=pd.DataFrame(x_scaled, columns=iris_numbers.columns)
+iris_df_num_scaled.head()
+
+
+Iris_norm = iris_df_num_scaled.join(Iris_df[["class"]])
+#Iris_norm = shuffle(Iris_norm)
+from sklearn.model_selection import train_test_split
+train, test = train_test_split(Iris_norm, test_size = .2)
+
+training_points = train.iloc[:,0:4]
+training_labels = train.iloc[:,4]
+test_points = test.iloc[:,0:4]
+test_labels = test.iloc[:,4]
+
+def distance(flower_1,flower_2,dataframe):
+    squared_dif = 0
+    for column in dataframe.columns:
+        squared_dif += (flower_1[column] - flower_2[column]) **2
+        final_distance = squared_dif **.5
+    return final_distance
+
+def classify(unknown,dataset_numbers,dataset_w_text,k):
+    distances= []
+    classification = {}
+    class_count = {}
+    counter = 1
+    for i in dataset_w_text.index.values.tolist():
+        flower = dataset_w_text.loc[i,"class"]
+        distance_to_point = distance(dataset_numbers.loc[i],unknown,dataset_numbers)
+        distances.append([distance_to_point,flower])
+        if flower in classification:
+            classification[flower] += distance_to_point
+        else:
+            classification[flower] = distance_to_point
+        if flower in class_count:
+            class_count[flower] += 1
+        else:
+            class_count[flower] = 1
+    distances.sort()
+    neighbors = distances[0:k]
+    df = DataFrame(neighbors,columns=['Difference','Flower'])
+    x = df.groupby(['Flower'])['Difference'].mean()
+    y = df.groupby(['Flower']).size()
+    return neighbors, class_count, classification, x, y
+
+
+
+
+
+****This is the start of the Netflix Datasest Portion****
+
+import pandas as pd
+df1 = pd.read_csv(r"C:\Users\drobey\Documents\Coding\Grad School\Linear Algebra\Project\1636_792972_bundle_archive\combined_data_1.txt", header = None, names = ['Cust_Id', 'Rating'], usecols = [0,1])
+
+****This is how to fix the import****
+
+import numpy as np
+df_nan = pd.DataFrame(pd.isnull(df1.Rating))
+df_nan = df_nan[df_nan['Rating'] == True]
+df_nan = df_nan.reset_index()
+
+movie_np = []
+movie_id = 1
+
+for i,j in zip(df_nan['index'][1:],df_nan['index'][:-1]):
+    # numpy approach
+    temp = np.full((1,i-j-1), movie_id)
+    movie_np = np.append(movie_np, temp)
+    movie_id += 1
+
+# Account for last record and corresponding length
+# numpy approach
+last_record = np.full((1,len(df1) - df_nan.iloc[-1, 0] - 1),movie_id)
+movie_np = np.append(movie_np, last_record)
+
+df = df1[pd.notnull(df1['Rating'])]
+
+df['Movie_Id'] = movie_np.astype(int)
+df['Cust_Id'] = df['Cust_Id'].astype(int)
+
+****Dataset is so huge, so i reduced it down to the movies that had alot of ratings (top 70 percentile)***
+
+f = ['count','mean']
+
+df_movie_summary = df.groupby('Movie_Id')['Rating'].agg(f)
+df_movie_summary.index = df_movie_summary.index.map(int)
+movie_benchmark = round(df_movie_summary['count'].quantile(0.7),0)
+drop_movie_list = df_movie_summary[df_movie_summary['count'] < movie_benchmark].index
+
+#print('Movie minimum times of review: {}'.format(movie_benchmark))
+
+df_cust_summary = df.groupby('Cust_Id')['Rating'].agg(f)
+df_cust_summary.index = df_cust_summary.index.map(int)
+cust_benchmark = round(df_cust_summary['count'].quantile(0.7),0)
+drop_cust_list = df_cust_summary[df_cust_summary['count'] < cust_benchmark].index
+
+print('Original Shape: {}'.format(df.shape))
+df = df[~df['Movie_Id'].isin(drop_movie_list)]
+df = df[~df['Cust_Id'].isin(drop_cust_list)]
+print('After Trim Shape: {}'.format(df.shape))
+
+
+***This is the final dataframe we can use for the KNN****
+df_p = pd.pivot_table(df,values='Rating',index='Cust_Id',columns='Movie_Id')
+
+***Distance Formula****
+***This takes one user his/her ratings on each movie and compares it to another. Also considers movies that aren't rated between the two, and just passes over them****
+def distance(flower_1,flower_2,dataframe):
+    squared_dif = 0
+    for column in dataframe.columns:
+        if np.isnan(flower_1[column]) or np.isnan(flower_2[column]):
+            squared_dif +=0
+        else:
+            squared_dif += (flower_1[column] - flower_2[column]) **2
+    final_distance = squared_dif **.5
+    return final_distance
+    
+****Classification Formula**** (I used the length/10 because it takes a bit to run otherwise)
+****This basically takes one user and compares it to all the other users and returns the 10 closest ones****
+***My thoughts here are that users with one movie that they rate the same might be ranked higher 
+than users who rate 9/10 movies the same. even though the 9/10 is a higher sample size and might actually be a better representation***
+def classify(unknown,dataset,k):
+    distances= []
+    length = round(len(dataset)/10)
+    for i in range(length):
+        customer = dataset.iloc[i]
+        distance_to_point = distance(dataset.iloc[i],unknown,dataset)
+        distances.append([distance_to_point,i])
+        distances.sort()
+    neighbors = distances[0:k]
+    return neighbors
+    
+****Classifying the first point**** (This returns a list of the top 10 closest users)
+nearest_neighbors = classify(df_p.iloc[0],df_p,10)

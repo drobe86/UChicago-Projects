@@ -1,0 +1,93 @@
+USE loan_data;
+
+ CREATE TABLE loan_details (
+	loan_id INT,
+	application_type VARCHAR (255),
+	descrip VARCHAR (255),
+	fico_range_high INT,
+	fico_range_low INT,
+	funded_amnt DECIMAL,
+	funded_amnt_inv DECIMAL,
+	grade VARCHAR(1),
+	installment INT,
+	int_rate DECIMAL,
+	issue_d VARCHAR(255),
+	purpose VARCHAR(255),
+	sub_grade VARCHAR(1),
+	title VARCHAR(255)
+);
+
+CREATE TABLE secondary_details (
+	sec_app_id INT,
+	sec_app_fico_range_low INT, 
+	sec_app_fico_range_high INT,
+	sec_app_earliest_cr_line DATE,
+	sec_app_inq_last_6mths INT,
+	sec_app_mort_acc INT,
+	sec_app_open_acc INT,
+	sec_app_revol_util DECIMAL,
+	sec_app_open_act_il INT,
+	sec_app_num_rev_accts INT,
+	sec_app_chargeoff_within_12_mths INT,
+	sec_app_collections_12_mths_ex_med INT,
+	sec_app_mths_since_last_major_derog INT
+);
+
+CREATE TABLE applicant (
+	applicant_id INT,
+	addr_state VARCHAR(45),
+	annual_inc DECIMAL,
+	annual_inc_joint DECIMAL,
+	emp_length INT,
+	emp_title VARCHAR(45),
+	home_ownership VARCHAR(10),
+	mths_since_last_record INT,
+	pub_rec INT,
+	pub_rec_bankruptcies INT
+    );
+
+CREATE TABLE loan_status (
+	loan_id INT,
+    loan_status VARCHAR(45)
+);
+
+CREATE TABLE credit_checks (
+	applicant_id INT,
+    inq_fi INT,
+	inq_last_12m INT,
+	inq_last_6mths INT
+);
+
+CREATE TABLE app_previous_activity (
+	applicant_id INT,
+    mo_sin_old_il_acct INT,
+	mo_sin_old_rev_tl_op INT,
+	mo_sin_rcnt_rev_tl_op INT,
+	mo_sin_rcnt_tl INT,
+	mort_acc INT,
+	mths_since_rcnt_il INT,
+	mths_since_recent_bc INT,
+	mths_since_recent_bc_dlq INT,
+	num_accts_ever_120_pd INT,
+	num_actv_bc_tl INT,
+	num_actv_rev_tl INT,
+	num_bc_sats INT,
+	num_bc_tl INT,
+	num_il_tl INT,
+	num_op_rev_tl INT,
+	num_rev_accts INT,
+	num_rev_tl_bal_gt_0 INT,
+	num_sats INT,
+	num_tl_120dpd_2m INT,
+	num_tl_30dpd INT,
+	num_tl_op_past_12m INT,
+	open_acc INT,
+	open_acc_6m INT,
+	open_il_12m INT,
+	open_act_il INT,
+	open_rv_12m INT,
+	pct_tl_nvr_dlq DECIMAL, 
+	percent_bc_gt_75 DECIMAL,
+	total_acc INT,
+	total_cu_tl INT
+);

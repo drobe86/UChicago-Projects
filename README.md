@@ -3,4 +3,15 @@ Projects from Uchicago
 
 ## Health Analytics:
  - Disease Prediction
- - Dale Robey and Ryan Casserly
+
+## TimeSeries
+ - Uber prices
+
+## Data Engineering:
+ - Financial Loans
+
+## Advanced Machine Learning:
+ - KNN
+ - Decision Tree
+ - Naive Bayes
+ - Neural Networks
